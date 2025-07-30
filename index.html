@@ -416,7 +416,7 @@ function buyUpgrade(type) { const upgrade = gameState.upgrades[type]; if (type =
 
     // V V V V V V V V V V V V V V V V V V V V V V V V
     // THIS IS THE NEW LINE YOU ARE ADDING!
-    upgrade.cost = Math.floor(upgrade.cost * 1.15);
+    upgrade.cost = Math.floor(upgrade.cost * 2);
     // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
 
 } } else if (type === 'resonance') { if (gameState.darkEssence < upgrade.cost) return; gameState.darkEssence -= upgrade.cost; upgrade.level++; } audio.click.play(); calculateStats(); renderAll(); saveGame(); }
