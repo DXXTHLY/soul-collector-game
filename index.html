@@ -1303,29 +1303,25 @@ function endDuel(playerWon) { clearInterval(duelState.gameInterval); clearInterv
 
 async function fetchPvpTargets() {
     const targetList = document.getElementById('pvp-target-list');
-    if (!targetList || JSONBIN_API_KEY === "$2a$10$0DH44rvBhaAsuxkGUfBhOuJ2CKDPgeEwYWe4dOYIY7fLXh/UxQ/da" || JSONBIN_API_KEY === "PASTE_YOUR_JSONBIN.IO_API_KEY_HERE") {
-        targetList.innerHTML = `<li>PvP Database not configured. <br><small>Go to jsonbin.io, get a free API key, and paste it into the script.</small></li>`;
+    if (!targetList || !supabase) {
+        targetList.innerHTML = `<li>PvP Database not configured.</li>`;
         return;
     }
-
     targetList.innerHTML = '<li><em>Scouring the abyss for rivals...</em></li>';
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/c/${JSONBIN_COLLECTION_ID}/bins`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
-        if (!res.ok) {
-            // Give a more specific error if the server returned a bad status
-            const errorBody = await res.json();
-            throw new Error(`Server responded with status ${res.status}: ${errorBody.message}`);
-        }
-        const data = await res.json();
-        
-        // This is where we will store the full player data for the raidPlayer function to use
-        window.potentialTargetsData = data.map(bin => bin.snippetMeta);
+        const { data, error } = await supabase
+            .from('players')
+            .select('*')
+            .neq('name', gameState.playerName) // Not equal to my name
+            .gte('lifetimeSouls', gameState.lifetimeSouls * 0.5) // Greater than or equal to 50% of my souls
+            .lte('lifetimeSouls', gameState.lifetimeSouls * 2); // Less than or equal to 200% of my souls
+            
+        if (error) throw error;
 
-        const potentialTargets = window.potentialTargetsData.filter(p => 
-            p.name !== gameState.playerName &&
-            p.lifetimeSouls > gameState.lifetimeSouls * 0.5 &&
-            p.lifetimeSouls < gameState.lifetimeSouls * 2
-        ).sort(() => 0.5 - Math.random()).slice(0, 5);
+        // Supabase doesn't have a random sort, so we shuffle the results in JS
+        const potentialTargets = data.sort(() => 0.5 - Math.random()).slice(0, 5);
+        
+        window.potentialTargetsData = data; // Store all potential targets for the raid function
 
         targetList.innerHTML = '';
         if (potentialTargets.length === 0) {
@@ -1339,8 +1335,8 @@ async function fetchPvpTargets() {
             targetList.appendChild(li);
         });
     } catch(e) {
-        targetList.innerHTML = `<li>Error finding targets. <br><small>Check the developer console (F12) for more details.</small></li>`;
-        console.error("Detailed PvP Error:", e); // This will show the actual error in the console
+        targetList.innerHTML = `<li>Error finding targets.</li>`;
+        console.error("Detailed PvP Error:", e);
     }
 }
 
