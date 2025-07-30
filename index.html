@@ -403,7 +403,23 @@ function harvestSoul() {
     
     updateDynamicDisplays();
 } // <-- The function ends here
-function buyUpgrade(type) { const upgrade = gameState.upgrades[type]; if (type === 'click' || type === 'sacrifice') { if (gameState.souls < upgrade.cost) return; gameState.souls -= upgrade.cost; if (type === 'click') { upgrade.level++; } else if (type === 'sacrifice') { let essenceGain = 1; let multi = 1; Object.keys(gameState.ownedArtifacts).forEach(id => { const bonus = artifacts[id]?.bonus; if (bonus && bonus.type === 'essence_multiplier') multi *= bonus.value; }); essenceGain *= multi; if (gameState.equipped.sigil && items[gameState.equipped.sigil]?.bonus.type === 'essence_multiplier') essenceGain *= items[gameState.equipped.sigil].bonus.value; gameState.darkEssence += Math.floor(essenceGain); } } else if (type === 'resonance') { if (gameState.darkEssence < upgrade.cost) return; gameState.darkEssence -= upgrade.cost; upgrade.level++; } audio.click.play(); calculateStats(); renderAll(); saveGame(); }
+function buyUpgrade(type) { const upgrade = gameState.upgrades[type]; if (type === 'click' || type === 'sacrifice') { if (gameState.souls < upgrade.cost) return; gameState.souls -= upgrade.cost; if (type === 'click') { upgrade.level++; } else if (type === 'sacrifice') {
+    let essenceGain = 1;
+    let multi = 1;
+    Object.keys(gameState.ownedArtifacts).forEach(id => {
+        const bonus = artifacts[id]?.bonus;
+        if (bonus && bonus.type === 'essence_multiplier') multi *= bonus.value;
+    });
+    essenceGain *= multi;
+    if (gameState.equipped.sigil && items[gameState.equipped.sigil]?.bonus.type === 'essence_multiplier') essenceGain *= items[gameState.equipped.sigil].bonus.value;
+    gameState.darkEssence += Math.floor(essenceGain);
+
+    // V V V V V V V V V V V V V V V V V V V V V V V V
+    // THIS IS THE NEW LINE YOU ARE ADDING!
+    upgrade.cost = Math.floor(upgrade.cost * 1.15);
+    // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
+
+} } else if (type === 'resonance') { if (gameState.darkEssence < upgrade.cost) return; gameState.darkEssence -= upgrade.cost; upgrade.level++; } audio.click.play(); calculateStats(); renderAll(); saveGame(); }
 function buyMinion(id) { const minionData = minions[id]; const playerMinion = gameState.minions[id]; if (gameState.souls >= playerMinion.cost) { gameState.souls -= playerMinion.cost; playerMinion.level++; audio.click.play(); calculateStats(); renderMinions(); checkButtons(); saveGame(); } }
 function buyArtifact(id) { const artifactData = artifacts[id]; if (gameState.darkEssence >= artifactData.cost && !gameState.ownedArtifacts[id]) { gameState.darkEssence -= artifactData.cost; gameState.ownedArtifacts[id] = true; audio.click.play(); calculateStats(); renderAll(); saveGame(); } }
 function activateRitual(id) { const ritualData = rituals[id]; const effect = ritualData.effect; let ritualDuration = effect.duration || 0; let ritualCooldown = ritualData.cooldown; Object.keys(gameState.ownedArtifacts).forEach(artId => { const bonus = artifacts[artId]?.bonus; if (bonus) { if (bonus.type === 'ritual_cooldown_reducer') ritualCooldown *= bonus.value; if (bonus.type === 'ritual_duration_multiplier') ritualDuration *= bonus.value; } }); if (gameState.souls >= ritualData.cost && !gameState.activeRituals[id]) { gameState.souls -= ritualData.cost; if (effect.type === 'gain_essence') gameState.darkEssence += effect.value; if (effect.type === 'gain_sps_seconds') gameState.souls += gameState.stats.sps * effect.value; if (effect.type === 'gain_souls_for_next_world') { const worldKeys = Object.keys(worlds); const currentWorldIndex = worldKeys.indexOf(gameState.currentWorld); const nextWorldId = worldKeys[currentWorldIndex + 1]; if (nextWorldId && worlds[nextWorldId]) gameState.souls += worlds[nextWorldId].unlockCost * effect.value; } if (effect.type === 'gain_shards_no_reset') gameState.abyssalShards += Math.floor(calculateShardsOnAscend() * effect.value); const now = Date.now(); gameState.activeRituals[id] = { cooldownEndTime: now + (ritualCooldown * 1000), buffEndTime: ritualDuration > 0 ? now + (ritualDuration * 1000) : null }; audio.click.play(); calculateStats(); renderAll(); saveGame(); } }
