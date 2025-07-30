@@ -238,7 +238,7 @@
 // =================================================================
 // PVP DATABASE & AUDIO SETUP
 // =================================================================
-const JSONBIN_API_KEY = "$2a$10$0DH44rvBhaAsuxkGUfBhOuJ2CKDPgeEwYWe4dOYIY7fLXh/UxQ/da";
+const JSONBIN_API_KEY = "$2a$10$jPMJISIyINKTmo1OJJz7H.cm44cuLmX1lIar0d3AiYrTYOWnYGLje";
 const JSONBIN_COLLECTION_ID = "65600d8e54105e766fd55c3c"; // Unique ID for this game
 let playerBinId = null; // We'll store the ID of the player's own data bin here
 
@@ -440,9 +440,101 @@ function renderAscensionScreen() { document.getElementById('ascendBtn').disabled
 // PVP & LEADERBOARD FUNCTIONS
 // =================================================================
 async function fetchLeaderboard(type = 'lifetimeSouls') { const list = document.getElementById('leaderboard-list'); const title = document.getElementById('leaderboard-title'); if (!list || !title || JSONBIN_API_KEY === "PASTE_YOUR_JSONBIN.IO_API_KEY_HERE") { list.innerHTML = `<li>PvP Database not configured.</li>`; return; } list.innerHTML = '<li><em>Summoning spirits...</em></li>'; try { const res = await fetch(`https://api.jsonbin.io/v3/c/${JSONBIN_COLLECTION_ID}/bins`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } }); if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`); const data = await res.json(); let players = data.map(bin => bin.snippetMeta); players.push({ name: gameState.playerName, lifetimeSouls: gameState.lifetimeSouls, ascensions: gameState.ascensions, pvpWins: gameState.pvpWins }); players = players.filter((p, i, self) => i === self.findIndex(t => t.name === p.name)); let rankingMetric = 'Souls'; switch (type) { case 'ascensions': players.sort((a,b) => (b.ascensions || 0) - (a.ascensions || 0)); rankingMetric = 'Ascensions'; title.innerText = 'Ranking by Ascensions'; break; case 'pvpWins': players.sort((a,b) => (b.pvpWins || 0) - (a.pvpWins || 0)); rankingMetric = 'Wins'; title.innerText = 'Ranking by PvP Wins'; break; default: players.sort((a,b) => (b.lifetimeSouls || 0) - (a.lifetimeSouls || 0)); rankingMetric = 'Souls'; title.innerText = 'Ranking by Total Souls'; break; } list.innerHTML = ''; players.slice(0, 10).forEach((player, index) => { const li = document.createElement('li'); let value = (type === 'ascensions') ? (player.ascensions || 0) : (type === 'pvpWins') ? (player.pvpWins || 0) : formatNumber(player.lifetimeSouls || 0); li.innerHTML = `<span>#${index + 1} ${player.name}</span> <span>${value} ${rankingMetric}</span>`; if (player.name === gameState.playerName) li.style.cssText = 'color: var(--primary-color); font-weight: bold;'; list.appendChild(li); }); } catch (e) { list.innerHTML = `<li>Error summoning spirits.</li>`; console.error(e); } }
-async function fetchPvpTargets() { const targetList = document.getElementById('pvp-target-list'); if (!targetList || JSONBIN_API_KEY === "PASTE_YOUR_JSONBIN.IO_API_KEY_HERE") { targetList.innerHTML = `<li>PvP Database not configured.</li>`; return; } targetList.innerHTML = '<li><em>Scouring the abyss for rivals...</em></li>'; try { const res = await fetch(`https://api.jsonbin.io/v3/c/${JSONBIN_COLLECTION_ID}/bins`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } }); if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`); const data = await res.json(); let players = data.map(bin => bin.snippetMeta); const potentialTargets = players.filter(p => p.name !== gameState.playerName && p.lifetimeSouls > gameState.lifetimeSouls * 0.5 && p.lifetimeSouls < gameState.lifetimeSouls * 2).sort(() => 0.5 - Math.random()).slice(0, 5); targetList.innerHTML = ''; if (potentialTargets.length === 0) { targetList.innerHTML = `<li>No suitable targets found.</li>`; return; } potentialTargets.forEach(player => { const li = document.createElement('li'); li.innerHTML = `<span>${player.name} (Wins: ${player.pvpWins || 0})</span> <button class="upgrade-btn" style="width: 100px;" onclick="raidPlayer('${player.name}')">Raid</button>`; targetList.appendChild(li); }); } catch(e) { targetList.innerHTML = `<li>Error finding targets.</li>`; console.error(e); } }
+// =================================================================
+// START OF NEW PVP CODE TO COPY
+// =================================================================
+
+async function fetchPvpTargets() {
+    const targetList = document.getElementById('pvp-target-list');
+    if (!targetList || JSONBIN_API_KEY === "$2a$10$0DH44rvBhaAsuxkGUfBhOuJ2CKDPgeEwYWe4dOYIY7fLXh/UxQ/da" || JSONBIN_API_KEY === "PASTE_YOUR_JSONBIN.IO_API_KEY_HERE") {
+        targetList.innerHTML = `<li>PvP Database not configured. <br><small>Go to jsonbin.io, get a free API key, and paste it into the script.</small></li>`;
+        return;
+    }
+
+    targetList.innerHTML = '<li><em>Scouring the abyss for rivals...</em></li>';
+    try {
+        const res = await fetch(`https://api.jsonbin.io/v3/c/${JSONBIN_COLLECTION_ID}/bins`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+        if (!res.ok) {
+            // Give a more specific error if the server returned a bad status
+            const errorBody = await res.json();
+            throw new Error(`Server responded with status ${res.status}: ${errorBody.message}`);
+        }
+        const data = await res.json();
+        
+        // This is where we will store the full player data for the raidPlayer function to use
+        window.potentialTargetsData = data.map(bin => bin.snippetMeta);
+
+        const potentialTargets = window.potentialTargetsData.filter(p => 
+            p.name !== gameState.playerName &&
+            p.lifetimeSouls > gameState.lifetimeSouls * 0.5 &&
+            p.lifetimeSouls < gameState.lifetimeSouls * 2
+        ).sort(() => 0.5 - Math.random()).slice(0, 5);
+
+        targetList.innerHTML = '';
+        if (potentialTargets.length === 0) {
+            targetList.innerHTML = `<li>No suitable targets found in your soul range. Keep harvesting!</li>`;
+            return;
+        }
+
+        potentialTargets.forEach(player => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${player.name} (Wins: ${player.pvpWins || 0})</span> <button class="upgrade-btn" style="width: 100px;" onclick="raidPlayer('${player.name}')">Raid</button>`;
+            targetList.appendChild(li);
+        });
+    } catch(e) {
+        targetList.innerHTML = `<li>Error finding targets. <br><small>Check the developer console (F12) for more details.</small></li>`;
+        console.error("Detailed PvP Error:", e); // This will show the actual error in the console
+    }
+}
+
+function raidPlayer(targetName) {
+    if (Date.now() < gameState.raidCooldownEnd) {
+        alert("Your raiding parties are exhausted. Wait for the cooldown.");
+        return;
+    }
+    
+    // **THE BUG FIX IS HERE:** We now use the 'window.potentialTargetsData' we saved earlier
+    // instead of the non-existent 'mockLeaderboard'.
+    if (!window.potentialTargetsData) {
+        alert("Target data not found! Please find new opponents first.");
+        return;
+    }
+    const defender = window.potentialTargetsData.find(p => p.name === targetName);
+
+    if (!defender) {
+        alert("Target has vanished!");
+        return;
+    }
+    duelState = {
+        active: true,
+        timer: 15,
+        opponent: defender,
+        opponentMaxHealth: (defender.lifetimeSouls || 1e9) / 1e5,
+        opponentCurrentHealth: (defender.lifetimeSouls || 1e9) / 1e5,
+        playerMaxHealth: (gameState.lifetimeSouls || 1e6) / 1e5,
+        playerCurrentHealth: (gameState.lifetimeSouls || 1e6) / 1e5,
+        opponentDamagePerSecond: (defender.lifetimeSouls || 1e9) / 1e8,
+        playerDamageMultiplier: 1,
+    };
+    const helmId = gameState.equipped.helm;
+    if (helmId && items[helmId]) {
+        const bonus = items[helmId].bonus;
+        if (bonus.type === 'pvp_defense') duelState.opponentDamagePerSecond *= bonus.value;
+        if (bonus.type === 'pvp_offense') duelState.playerDamageMultiplier = bonus.value;
+        if (bonus.type === 'pvp_headstart') duelState.playerDamageImmuneUntil = Date.now() + (bonus.value * 1000);
+    }
+    document.getElementById('duel-overlay').style.display = 'flex';
+    document.getElementById('opponent-name').innerText = `VS ${defender.name}`;
+    updateDuelUI();
+    duelState.gameInterval = setInterval(duelGameLoop, 100);
+    duelState.weakPointInterval = setInterval(spawnWeakPoint, 1500);
+}
+
+// =================================================================
+// END OF NEW PVP CODE
+// =================================================================
 function renderPvpLog() { const logList = document.getElementById('pvp-log-list'); if(!logList) return; logList.innerHTML = ''; if (!gameState.attackLog || gameState.attackLog.length === 0) { logList.innerHTML = '<li>Your log is clear.</li>'; return; } [...gameState.attackLog].reverse().slice(0, 10).forEach(entry => { const li = document.createElement('li'); li.innerHTML = entry.message; li.style.color = entry.type === 'win' ? 'lime' : 'var(--primary-color)'; logList.appendChild(li); }); }
-function raidPlayer(targetName) { if (Date.now() < gameState.raidCooldownEnd) { alert("Your raiding parties are exhausted. Wait for the cooldown."); return; } const defender = mockLeaderboard.find(p => p.name === targetName); if (!defender) { alert("Target has vanished!"); return; } duelState = { active: true, timer: 15, opponent: defender, opponentMaxHealth: (defender.lifetimeSouls || 1e9) / 1e5, opponentCurrentHealth: (defender.lifetimeSouls || 1e9) / 1e5, playerMaxHealth: (gameState.lifetimeSouls || 1e6) / 1e5, playerCurrentHealth: (gameState.lifetimeSouls || 1e6) / 1e5, opponentDamagePerSecond: (defender.lifetimeSouls || 1e9) / 1e8, playerDamageMultiplier: 1, }; const helmId = gameState.equipped.helm; if (helmId && items[helmId]) { const bonus = items[helmId].bonus; if (bonus.type === 'pvp_defense') duelState.opponentDamagePerSecond *= bonus.value; if (bonus.type === 'pvp_offense') duelState.playerDamageMultiplier = bonus.value; if (bonus.type === 'pvp_headstart') duelState.playerDamageImmuneUntil = Date.now() + (bonus.value * 1000); } document.getElementById('duel-overlay').style.display = 'flex'; document.getElementById('opponent-name').innerText = `VS ${defender.name}`; updateDuelUI(); duelState.gameInterval = setInterval(duelGameLoop, 100); duelState.weakPointInterval = setInterval(spawnWeakPoint, 1500); }
+
 function updateRaidCooldownDisplay() { const timerEl = document.getElementById('raid-cooldown-timer'); if (!timerEl) return; const now = Date.now(); if (now < gameState.raidCooldownEnd) { const timeLeft = Math.ceil((gameState.raidCooldownEnd - now) / 1000); timerEl.innerText = `Raid Cooldown: ${timeLeft}s`; } else { timerEl.innerText = 'Raid Ready!'; } }
 function duelClickCore() { if (!duelState.active) return; const damage = gameState.stats.spc * duelState.playerDamageMultiplier; duelState.opponentCurrentHealth -= damage; if (duelState.opponentCurrentHealth <= 0) endDuel(true); updateDuelUI(); }
 function duelClickWeakPoint(event) { if (!duelState.active) return; const damage = (gameState.stats.spc * 5) * duelState.playerDamageMultiplier; duelState.opponentCurrentHealth -= damage; event.target.remove(); if (duelState.opponentCurrentHealth <= 0) endDuel(true); updateDuelUI(); }
