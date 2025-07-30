@@ -1,5 +1,7 @@
 # 🔥 Soul Collector - Abyssal Ascension 🔥
 
+> Game: https://dxxthly.github.io/soul-collector-game
+
 *An incremental idle game of cosmic consequence and endless harvesting.*
 
 > The last star has flickered out. The universe has succumbed to entropy, its once-vibrant energies fading into a cold, silent void. Yet, not all is lost. You are a Soul Collector, an ancient and powerful entity existing outside of time, tasked with a monumental purpose: to harvest the lingering echoes of life—the souls—before they fade into nothingness.
