@@ -244,7 +244,8 @@ const SUPABASE_URL = 'https://gqlpebvyiobwdyiezxma.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxbHBlYnZ5aW9id2R5aWV6eG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4ODc5NDksImV4cCI6MjA2OTQ2Mzk0OX0.t2ezVurCrC1uOsdKaPJSddQmdeQnhPlFlv9HDTSftHQ';
 // -------------------------------------------------
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const { createClient } = supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let playerBinId = null; // We will use this to store the player's unique name
 
