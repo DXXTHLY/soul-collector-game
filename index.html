@@ -361,7 +361,48 @@ function deepMerge(target, source) {
 // =================================================================
 // CORE GAMEPLAY FUNCTIONS
 // =================================================================
-function harvestSoul() { if (antiCheatState.isLockedOut) return; const gain = gameState.stats.spc; gameState.souls += gain; gameState.lifetimeSouls += gain; const btn = document.querySelector('.action-btn'); btn.classList.remove('thump-animation'); void btn.offsetWidth; btn.classList.add('thump-animation'); audio.harvest.currentTime=0; audio.harvest.play(); const rect = btn.getBoundingClientRect(); for (let i = 0; i < 5; i++) { const particle = document.createElement('div'); particle.className = 'soul-particle'; document.body.appendChild(particle); particle.style.left = `${rect.left + rect.width / 2}px`; particle.style.top = `${rect.top + rect.height / 2}px`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 80 + 50; particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`); particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`); setTimeout(() => particle.remove(), 800); } const worldBonus = worlds[gameState.currentWorld].bonus; if (worldBonus.type === 'essence_bonus_chance' && Math.random() < worldBonus.value) gameState.darkEssence += 1; const weaponId = gameState.equipped.weapon; if (weaponId && items[weaponId]) { let bonus = items[weaponId].bonus; do { if (bonus.type === 'spc_essence_chance' && Math.random() < bonus.value) gameState.darkEssence += 1; bonus = bonus.and ? bonus.and : null; } while (bonus); } runAntiCheatChecks(); updateDynamicDisplays(); }
+function harvestSoul() {
+    if (antiCheatState.isLockedOut) return;
+    const gain = gameState.stats.spc;
+    gameState.souls += gain;
+    gameState.lifetimeSouls += gain;
+    const btn = document.querySelector('.action-btn');
+    btn.classList.remove('thump-animation');
+    void btn.offsetWidth;
+    btn.classList.add('thump-animation');
+    audio.harvest.currentTime=0;
+    audio.harvest.play();
+    const rect = btn.getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'soul-particle';
+        document.body.appendChild(particle);
+        particle.style.left = `${rect.left + rect.width / 2}px`;
+        particle.style.top = `${rect.top + rect.height / 2}px`;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 80 + 50;
+        particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        setTimeout(() => particle.remove(), 800);
+    }
+    const worldBonus = worlds[gameState.currentWorld].bonus;
+    if (worldBonus.type === 'essence_bonus_chance' && Math.random() < worldBonus.value) gameState.darkEssence += 1;
+    const weaponId = gameState.equipped.weapon;
+    if (weaponId && items[weaponId]) {
+        let bonus = items[weaponId].bonus;
+        do {
+            if (bonus.type === 'spc_essence_chance' && Math.random() < bonus.value) gameState.darkEssence += 1;
+            bonus = bonus.and ? bonus.and : null;
+        } while (bonus);
+    }
+    
+    // V V V V V V V V V V V V V V V V V V V V V V
+    // THIS IS THE LINE IM FOR WELL YOU KNOW WHAT
+        runAntiCheatChecks(); 
+    // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
+    
+    updateDynamicDisplays();
+} // <-- The function ends here
 function buyUpgrade(type) { const upgrade = gameState.upgrades[type]; if (type === 'click' || type === 'sacrifice') { if (gameState.souls < upgrade.cost) return; gameState.souls -= upgrade.cost; if (type === 'click') { upgrade.level++; } else if (type === 'sacrifice') { let essenceGain = 1; let multi = 1; Object.keys(gameState.ownedArtifacts).forEach(id => { const bonus = artifacts[id]?.bonus; if (bonus && bonus.type === 'essence_multiplier') multi *= bonus.value; }); essenceGain *= multi; if (gameState.equipped.sigil && items[gameState.equipped.sigil]?.bonus.type === 'essence_multiplier') essenceGain *= items[gameState.equipped.sigil].bonus.value; gameState.darkEssence += Math.floor(essenceGain); } } else if (type === 'resonance') { if (gameState.darkEssence < upgrade.cost) return; gameState.darkEssence -= upgrade.cost; upgrade.level++; } audio.click.play(); calculateStats(); renderAll(); saveGame(); }
 function buyMinion(id) { const minionData = minions[id]; const playerMinion = gameState.minions[id]; if (gameState.souls >= playerMinion.cost) { gameState.souls -= playerMinion.cost; playerMinion.level++; audio.click.play(); calculateStats(); renderMinions(); checkButtons(); saveGame(); } }
 function buyArtifact(id) { const artifactData = artifacts[id]; if (gameState.darkEssence >= artifactData.cost && !gameState.ownedArtifacts[id]) { gameState.darkEssence -= artifactData.cost; gameState.ownedArtifacts[id] = true; audio.click.play(); calculateStats(); renderAll(); saveGame(); } }
