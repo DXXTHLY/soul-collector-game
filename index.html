@@ -544,12 +544,12 @@ function raidPlayer(targetName) {
         return;
     }
     if (!window.potentialTargetsData) {
-        alert("Target data has expired! Please find new opponents.");
+        alert("Target data has expired! Please find new opponents first.");
         return;
     }
     const defender = window.potentialTargetsData.find(p => p.name === targetName);
     if (!defender) {
-        alert("Target has vanished into the abyss!");
+        alert("Target has vanished!");
         return;
     }
     
@@ -581,8 +581,9 @@ function raidPlayer(targetName) {
         </div>
         <div id="duel-timer">15</div>`;
 
-    updateDuelUI();
-    audio.duelHeartbeat.play().catch(e => {});
+    updateDuelUI(); // Set the initial health bars
+    
+    // THIS IS THE CRITICAL FIX: START THE LOOPS
     duelState.gameInterval = setInterval(duelGameLoop, 1000 / 60); // Run at 60fps for smoothness
     duelState.weakPointInterval = setInterval(spawnWeakPoint, 1800);
 }
@@ -617,22 +618,20 @@ function updateRaidCooldownDisplay() {
 
 function duelClickCore() {
     if (!duelState.active) return;
-    // FIXED: Damage is a small, fixed amount, modified by items.
+    // FIXED: Damage is a small, fixed amount, not your huge SPC.
     let damage = 2.5; 
     const helmId = gameState.equipped.helm;
     if (helmId && items[helmId]?.bonus.type === 'pvp_offense') {
         damage *= items[helmId].bonus.value;
     }
     duelState.opponentCurrentHealth -= damage;
-    audio.duelDamage.currentTime = 0;
-    audio.duelDamage.play().catch(e => {});
     if (duelState.opponentCurrentHealth <= 0) endDuel(true);
     updateDuelUI();
 }
 
 function duelClickWeakPoint(event) {
     if (!duelState.active) return;
-    // FIXED: Weak point damage is a critical hit, a multiplier of the base damage.
+    // FIXED: Weak point is a critical hit, dealing more fixed damage.
     let damage = 10;
      const helmId = gameState.equipped.helm;
     if (helmId && items[helmId]?.bonus.type === 'pvp_offense') {
@@ -640,8 +639,6 @@ function duelClickWeakPoint(event) {
     }
     duelState.opponentCurrentHealth -= damage;
     event.target.remove();
-    audio.duelCrit.currentTime = 0;
-    audio.duelCrit.play().catch(e => {});
     if (duelState.opponentCurrentHealth <= 0) endDuel(true);
     updateDuelUI();
 }
@@ -707,7 +704,6 @@ function endDuel(playerWon) {
     clearInterval(duelState.gameInterval);
     clearInterval(duelState.weakPointInterval);
     duelState.active = false;
-    audio.duelHeartbeat.pause();
     
     const defender = duelState.opponent;
     const duelContainer = document.getElementById('duel-container');
@@ -734,6 +730,7 @@ function endDuel(playerWon) {
         </div>`;
     }
 
+    // Wait 4 seconds before closing the duel screen
     setTimeout(() => {
         document.getElementById('duel-overlay').style.display = 'none';
         gameState.raidCooldownEnd = Date.now() + 60000;
