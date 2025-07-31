@@ -38,6 +38,29 @@
         h1 { font-size: var(--font-size-xxl); } h2 { font-size: var(--font-size-xl); margin-bottom: 0; }
         h3 { color: var(--secondary-color); text-shadow: 1px 1px 2px #000; letter-spacing: 1px; }
         .screen p { font-size: 1.1rem; }
+        #rift-container {
+            position: relative;
+            margin: 25px auto;
+            /* Set a fixed size so the layout doesn't jump */
+            width: 300px; 
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #rift-canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1; /* Behind the button */
+            pointer-events: none; /* Allows clicks to pass through to the button */
+            opacity: 0.7;
+        }
+        button.action-btn {
+            position: relative; /* Make sure button is on top */
+            z-index: 2;
+        }
         #rift-container { position: relative; margin: 25px auto; width: 300px; height: 120px; }
         #rift-canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; opacity: 0.7; }
         button.action-btn { padding: 25px 50px; font-size: var(--font-size-xl); font-family: var(--font-title); background: linear-gradient(145deg, #c02323, var(--primary-color)); color: white; border: 2px solid #000; border-bottom: 4px solid #000; border-right: 4px solid #000; box-shadow: inset 0 0 15px rgba(0,0,0,0.7); cursor: pointer; transition: all 0.1s ease-out; text-transform: uppercase; display: block; position: relative; z-index: 2; margin: 0 auto; }
@@ -284,7 +307,54 @@ audio.bgm.volume = 0.3;
 // =================================================================
 const numberFormatter = new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short' });
 function formatNumber(num) { if (num < 100000) return Math.floor(num).toLocaleString(); return numberFormatter.format(num); }
-const minions = { imp: { name: "Imp", baseSps: 0.1, cost: 25, multiplier: 1.15, requiredWorld: 'nether_plains' }, ghoul: { name: "Ghoul", baseSps: 0.5, cost: 150, multiplier: 1.16, requiredWorld: 'nether_plains' }, demon: { name: "Lesser Demon", baseSps: 2, cost: 1000, multiplier: 1.18, requiredWorld: 'nether_plains' }, ash_golem: { name: "Ash Golem", baseSps: 15, cost: 50000, multiplier: 1.20, requiredWorld: 'ashen_wastes' }, cinder_wraith: { name: "Cinder Wraith", baseSps: 80, cost: 3e5, multiplier: 1.21, requiredWorld: 'ashen_wastes' }, abyssal_stalker: { name: "Abyssal Stalker", baseSps: 400, cost: 1.5e6, multiplier: 1.22, requiredWorld: 'stygian_depths', bonus: {type: 'sps_to_spc', value: 0.0001}}, river_hydra: { name: "River Hydra", baseSps: 2200, cost: 8e6, multiplier: 1.23, requiredWorld: 'stygian_depths' }, hellhound: { name: "Hellhound", baseSps: 1.2e4, cost: 4e7, multiplier: 1.24, requiredWorld: 'burning_hells' }, balrog: { name: "Balrog", baseSps: 6e4, cost: 2.5e8, multiplier: 1.25, requiredWorld: 'burning_hells' }, pit_lord: { name: "Pit Lord", baseSps: 3e5, cost: 1.5e9, multiplier: 1.26, requiredWorld: 'burning_hells' }, frost_lich: { name: "Frost Lich", baseSps: 2e6, cost: 8e9, multiplier: 1.28, requiredWorld: 'frozen_abyss' }, icefiend: { name: "Icefiend", baseSps: 1.1e7, cost: 5e10, multiplier: 1.29, requiredWorld: 'frozen_abyss' }, glacial_titan: { name: "Glacial Titan", baseSps: 6e7, cost: 3e11, multiplier: 1.30, requiredWorld: 'frozen_abyss', bonus: {type: 'global_sps_multiplier_per_level', value: 0.001}}, fallen_angel: { name: "Fallen Angel", baseSps: 4e8, cost: 2e12, multiplier: 1.32, requiredWorld: 'celestial_ruins' }, corrupted_cherub:{ name: "Corrupted Cherub",baseSps: 2.5e9, cost: 1.2e13, multiplier: 1.33, requiredWorld: 'celestial_ruins' }, void_spawn: { name: "Void Spawn", baseSps: 1.5e10, cost: 7e13, multiplier: 1.35, requiredWorld: 'void_threshold' }, shoggoth: { name: "Shoggoth", baseSps: 9e10, cost: 4e14, multiplier: 1.36, requiredWorld: 'void_threshold' }, reality_warper: { name: "Reality Warper", baseSps: 6e12, cost: 2e16, multiplier: 1.38, requiredWorld: 'singularity' }, echo_of_nothing: { name: "Echo of Nothing", baseSps: 4e13, cost: 1e17, multiplier: 1.40, requiredWorld: 'singularity', bonus: {type: 'shards_from_ascension_multiplier_per_level', value: 0.002}}, spacetime_ghast: { name: "Spacetime Ghast", baseSps: 3e15, cost: 5e19, multiplier: 1.42, requiredWorld: 'event_horizon' }, causal_predator: { name: "Causal Predator", baseSps: 2e16, cost: 3e20, multiplier: 1.44, requiredWorld: 'event_horizon', bonus: {type: 'essence_multiplier_per_level', value: 0.005 }}, nebulous_entity: { name: "Nebulous Entity", baseSps: 1e18, cost: 2e22, multiplier: 1.46, requiredWorld: 'genesis' }, creator_wisp: { name: "Creator Wisp", baseSps: 8e18, cost: 1e23, multiplier: 1.48, requiredWorld: 'genesis' }, god_eater: { name: "God Eater", baseSps: 5e22, cost: 5e26, multiplier: 1.50, requiredWorld: 'pantheon_of_ashes' }, deific_remnant: { name: "Deific Remnant", baseSps: 4e23, cost: 3e27, multiplier: 1.52, requiredWorld: 'pantheon_of_ashes', bonus: {type: 'resonance_effectiveness_per_level', value: 0.01}}, time_leech: { name: "Time Leech", baseSps: 2e28, cost: 1e32, multiplier: 1.55, requiredWorld: 'chronos_fault', bonus: {type: 'ritual_cooldown_reducer_per_level', value: 0.001}}, eon_devourer: { name: "Eon Devourer", baseSps: 1.5e29, cost: 8e32, multiplier: 1.58, requiredWorld: 'chronos_fault' }, alpha_omega: { name: "Alpha & Omega", baseSps: 1e35, cost: 1e39, multiplier: 1.65, requiredWorld: 'omega_point', bonus: {type: 'ascension_shard_bonus_per_level', value: 0.005}}, };
+const minions = {
+  imp: { name: "Imp", baseSps: 0.1, cost: 25, multiplier: 1.15, requiredWorld: 'nether_plains' },
+  ghoul: { name: "Ghoul", baseSps: 0.5, cost: 150, multiplier: 1.16, requiredWorld: 'nether_plains' },
+  demon: { name: "Lesser Demon", baseSps: 2, cost: 1000, multiplier: 1.18, requiredWorld: 'nether_plains' },
+  ash_golem: { name: "Ash Golem", baseSps: 15, cost: 50000, multiplier: 1.20, requiredWorld: 'ashen_wastes' },
+  cinder_wraith: { name: "Cinder Wraith", baseSps: 80, cost: 3e5, multiplier: 1.21, requiredWorld: 'ashen_wastes' },
+  abyssal_stalker: { name: "Abyssal Stalker", baseSps: 400, cost: 1.5e6, multiplier: 1.22, requiredWorld: 'stygian_depths', bonus: {type: 'sps_to_spc', value: 0.0001}},
+  river_hydra: { name: "River Hydra", baseSps: 2200, cost: 8e6, multiplier: 1.23, requiredWorld: 'stygian_depths' },
+  hellhound: { name: "Hellhound", baseSps: 1.2e4, cost: 4e7, multiplier: 1.24, requiredWorld: 'burning_hells' },
+  balrog: { name: "Balrog", baseSps: 6e4, cost: 2.5e8, multiplier: 1.25, requiredWorld: 'burning_hells' },
+  pit_lord: { name: "Pit Lord", baseSps: 3e5, cost: 1.5e9, multiplier: 1.26, requiredWorld: 'burning_hells' },
+  frost_lich: { name: "Frost Lich", baseSps: 2e6, cost: 8e9, multiplier: 1.28, requiredWorld: 'frozen_abyss' },
+  icefiend: { name: "Icefiend", baseSps: 1.1e7, cost: 5e10, multiplier: 1.29, requiredWorld: 'frozen_abyss' },
+  glacial_titan: { name: "Glacial Titan", baseSps: 6e7, cost: 3e11, multiplier: 1.30, requiredWorld: 'frozen_abyss', bonus: {type: 'global_sps_multiplier_per_level', value: 0.001}},
+  fallen_angel: { name: "Fallen Angel", baseSps: 4e8, cost: 2e12, multiplier: 1.32, requiredWorld: 'celestial_ruins' },
+  corrupted_cherub:{ name: "Corrupted Cherub", baseSps: 2.5e9, cost: 1.2e13, multiplier: 1.33, requiredWorld: 'celestial_ruins' },
+  void_spawn: { name: "Void Spawn", baseSps: 1.5e10, cost: 7e13, multiplier: 1.35, requiredWorld: 'void_threshold' },
+  shoggoth: { name: "Shoggoth", baseSps: 9e10, cost: 4e14, multiplier: 1.36, requiredWorld: 'void_threshold' },
+  reality_warper: { name: "Reality Warper", baseSps: 6e12, cost: 2e16, multiplier: 1.38, requiredWorld: 'singularity' },
+  echo_of_nothing: { name: "Echo of Nothing", baseSps: 4e13, cost: 1e17, multiplier: 1.40, requiredWorld: 'singularity', bonus: {type: 'shards_from_ascension_multiplier_per_level', value: 0.002}},
+  spacetime_ghast: { name: "Spacetime Ghast", baseSps: 3e15, cost: 5e19, multiplier: 1.42, requiredWorld: 'event_horizon' },
+  causal_predator: { name: "Causal Predator", baseSps: 2e16, cost: 3e20, multiplier: 1.44, requiredWorld: 'event_horizon', bonus: {type: 'essence_multiplier_per_level', value: 0.005 }},
+  nebulous_entity: { name: "Nebulous Entity", baseSps: 1e18, cost: 2e22, multiplier: 1.46, requiredWorld: 'genesis' },
+  creator_wisp: { name: "Creator Wisp", baseSps: 8e18, cost: 1e23, multiplier: 1.48, requiredWorld: 'genesis' },
+  god_eater: { name: "God Eater", baseSps: 5e22, cost: 5e26, multiplier: 1.50, requiredWorld: 'pantheon_of_ashes' },
+  deific_remnant: { name: "Deific Remnant", baseSps: 4e23, cost: 3e27, multiplier: 1.52, requiredWorld: 'pantheon_of_ashes', bonus: {type: 'resonance_effectiveness_per_level', value: 0.01}},
+  time_leech: { name: "Time Leech", baseSps: 2e28, cost: 1e32, multiplier: 1.55, requiredWorld: 'chronos_fault', bonus: {type: 'ritual_cooldown_reducer_per_level', value: 0.001}},
+  eon_devourer: { name: "Eon Devourer", baseSps: 1.5e29, cost: 8e32, multiplier: 1.58, requiredWorld: 'chronos_fault' },
+  alpha_omega: { name: "Alpha & Omega", baseSps: 1e35, cost: 1e39, multiplier: 1.65, requiredWorld: 'omega_point', bonus: {type: 'ascension_shard_bonus_per_level', value: 0.005}},
+
+  // Tier 14 (COSMIC): True Infinity
+  concept_of_death: {
+    name: "Concept of Death",
+    baseSps: 1e38,
+    cost: 1e44,
+    multiplier: 1.70,
+    requiredWorld: 'true_infinity'
+  },
+  the_last_question: {
+    name: "The Last Question",
+    baseSps: 1e41,
+    cost: 1e48,
+    multiplier: 1.80,
+    requiredWorld: 'true_infinity',
+    bonus: { type: 'ascension_shard_bonus', value: 1.0 } // Doubles shard gain
+  }
+};
+
 const artifacts = {
   shard_of_avarice: {
     name: "Shard of Avarice",
@@ -459,7 +529,7 @@ const artifacts = {
 };
 
 const rituals = { blood_frenzy: { name: "Blood Frenzy", desc: "Double your Souls Per Click for 30 seconds.", cost: 10000, cooldown: 300, requiredWorld: 'nether_plains', effect: {type: 'spc_multiplier', value: 2, duration: 30}}, demonic_horde: { name: "Demonic Horde", desc: "Double your Souls Per Second for 60 seconds.", cost: 50000, cooldown: 600, requiredWorld: 'nether_plains', effect: {type: 'sps_multiplier', value: 2, duration: 60}}, soul_sear: { name: "Soul Sear", desc: "Instantly gain souls equal to 10 minutes of SPS.", cost: 1e6, cooldown: 1800, requiredWorld: 'ashen_wastes', effect: {type: 'gain_sps_seconds', value: 600}}, essence_theft: { name: "Essence Theft", desc: "Instantly gain 1 Dark Essence.", cost: 1e8, cooldown: 3600, requiredWorld: 'stygian_depths', effect: {type: 'gain_essence', value: 1}}, unholy_power: { name: "Unholy Power", desc: "All soul gains are tripled for 2 minutes.", cost: 1e11, cooldown: 1800, requiredWorld: 'burning_hells', effect: {type: 'global_multiplier', value: 3, duration: 120}}, devils_bargain:{ name: "Devil's Bargain", desc: "All minion costs are halved for 5 minutes.", cost: 1e13, cooldown: 7200, requiredWorld: 'burning_hells', effect: {type: 'temp_minion_cost_reducer', value: 0.5, duration: 300}}, glacial_freeze:{ name: "Glacial Freeze",desc: "For 1 minute, all clicks also generate 1% of your SPS.", cost: 1e16, cooldown: 3600, requiredWorld: 'frozen_abyss', effect: {type: 'add_sps_to_spc', value: 0.01, duration: 60}}, divine_curse: { name: "Divine Curse", desc: "For 90s, all soul gains are multiplied by your Dark Essence count.", cost: 1e20, cooldown: 10800, requiredWorld: 'celestial_ruins', effect: {type: 'multiplier_by_essence', duration: 90}}, void_rupture: { name: "Void Rupture", desc: "Instantly gain 1% of the souls required for the next world.", cost: 1e24, cooldown: 86400, requiredWorld: 'void_threshold', effect: {type: 'gain_souls_for_next_world', value: 0.01}}, entropic_cascade: { name: "Entropic Cascade", desc: "For 30 seconds, your total soul gain is SQUARED.", cost: 1e28, cooldown: 43200, requiredWorld: 'pantheon_of_ashes', effect: {type: 'square_all_gain', duration: 30}}, ascendants_echo: { name: "Ascendant's Echo", desc: "Instantly gain Shards equal to 10% of your next Ascension without resetting.", cost: 1e34, cooldown: 172800, requiredWorld: 'chronos_fault', effect: {type: 'gain_shards_no_reset', value: 0.1}}, };
-const worlds = { nether_plains: { name: "Nether Plains", unlockCost: 0, perk: "Unlocks basic minions.", bonus: { type: 'none' }, lore:"A swirling gray expanse where the weakest and most plentiful souls wander, ripe for the taking." }, ashen_wastes: { name: "Ashen Wastes", unlockCost: 5e4, perk: "Unlocks fire-themed minions.", bonus: { type: 'sps_multiplier', value: 1.25 }, lore:"Endless dunes of gray ash under a perpetually smoldering sky. The air crackles with embers and lost rage."}, stygian_depths: { name: "Stygian Depths", unlockCost: 2.5e5, perk: "Unlocks aquatic demons.", bonus: { type: 'spc_multiplier', value: 1.5 }, lore:"A lightless, crushing ocean of liquid despair. Only things born of sorrow can survive here."}, burning_hells: { name: "The Burning Hells", unlockCost: 7.5e5, perk: "Unlocks powerful lords of hell.", bonus: { type: 'global_multiplier', value: 1.2 }, lore:"A realm of jagged obsidian and rivers of fire, ruled by ancient beings of pure malice."}, frozen_abyss: { name: "The Frozen Abyss", unlockCost: 1.5e6, perk: "Unlocks ice-themed titans.", bonus: { type: 'sps_multiplier', value: 1.5 }, lore:"A place so cold that even souls freeze solid. The silence here is a weapon."}, celestial_ruins: { name: "Celestial Ruins", unlockCost: 8e6, perk: "Harvest the souls of fallen celestials.", bonus: { type: 'essence_bonus_chance', value: 0.001 }, lore:"The shattered remains of a forgotten heaven. The souls here are potent, tinged with both divinity and regret."}, void_threshold: { name: "Void Threshold", unlockCost: 2.5e7, perk: "Enables Ascension. Unlocks void beings.", bonus: { type: 'ascension_unlock' }, lore:"The precipice of non-existence. Here, you learn that to truly grow, you must first become nothing."}, singularity: { name: "The Singularity", unlockCost: 1e9, perk: "Boosts essence gain x2.", bonus: { type: 'essence_multiplier', value: 2 }, lore:"All matter, energy, and souls compressed into a single, screaming point of infinite density."}, event_horizon: { name: "Event Horizon", unlockCost: 1e11, perk: "Beyond this, only shards matter.", bonus: { type: 'ascension_shard_bonus', value: 0.25 }, lore:"The point of no return. The power of your previous harvests is the only thing that has meaning now."}, genesis: { name: "Genesis", unlockCost: 1e13, perk: "Doubles shard gains.", bonus: { type: 'ascension_shard_bonus', value: 1 }, lore:"The spark that came before the first bang. A realm of pure potential, waiting to be consumed and remade."}, pantheon_of_ashes: { name: "Pantheon of Ashes", unlockCost: 1e18, perk: "Soul Resonance is twice as effective.", bonus: { type: 'resonance_bonus_enhancer', value: 1}, lore:"The graveyard of forgotten gods. Their fading power infuses every soul you claim here."}, chronos_fault: { name: "Chronos' Fault", unlockCost: 1e25, perk: "All ritual cooldowns are halved.", bonus: { type: 'ritual_cooldown_reducer', value: 0.5}, lore:"A crack in time itself. The laws of cause and effect are suggestions, not rules."}, omega_point: { name: "Omega Point", unlockCost: 1e33, perk: "All soul gains x10.", bonus: { type: 'global_multiplier', value: 10 }, lore:"The final moment of the final universe. All that was, is, and ever will be is harvested in a single, glorious instant."}, };
+const worlds = { nether_plains: { name: "Nether Plains", unlockCost: 0, perk: "Unlocks basic minions.", bonus: { type: 'none' }, lore:"A swirling gray expanse where the weakest and most plentiful souls wander, ripe for the taking." }, ashen_wastes: { name: "Ashen Wastes", unlockCost: 5e4, perk: "Unlocks fire-themed minions.", bonus: { type: 'sps_multiplier', value: 1.25 }, lore:"Endless dunes of gray ash under a perpetually smoldering sky. The air crackles with embers and lost rage."}, stygian_depths: { name: "Stygian Depths", unlockCost: 2.5e5, perk: "Unlocks aquatic demons.", bonus: { type: 'spc_multiplier', value: 1.5 }, lore:"A lightless, crushing ocean of liquid despair. Only things born of sorrow can survive here."}, burning_hells: { name: "The Burning Hells", unlockCost: 7.5e5, perk: "Unlocks powerful lords of hell.", bonus: { type: 'global_multiplier', value: 1.2 }, lore:"A realm of jagged obsidian and rivers of fire, ruled by ancient beings of pure malice."}, frozen_abyss: { name: "The Frozen Abyss", unlockCost: 1.5e6, perk: "Unlocks ice-themed titans.", bonus: { type: 'sps_multiplier', value: 1.5 }, lore:"A place so cold that even souls freeze solid. The silence here is a weapon."}, celestial_ruins: { name: "Celestial Ruins", unlockCost: 8e6, perk: "Harvest the souls of fallen celestials.", bonus: { type: 'essence_bonus_chance', value: 0.001 }, lore:"The shattered remains of a forgotten heaven. The souls here are potent, tinged with both divinity and regret."}, void_threshold: { name: "Void Threshold", unlockCost: 2.5e7, perk: "Enables Ascension. Unlocks void beings.", bonus: { type: 'ascension_unlock' }, lore:"The precipice of non-existence. Here, you learn that to truly grow, you must first become nothing."}, singularity: { name: "The Singularity", unlockCost: 1e9, perk: "Boosts essence gain x2.", bonus: { type: 'essence_multiplier', value: 2 }, lore:"All matter, energy, and souls compressed into a single, screaming point of infinite density."}, event_horizon: { name: "Event Horizon", unlockCost: 1e11, perk: "Beyond this, only shards matter.", bonus: { type: 'ascension_shard_bonus', value: 0.25 }, lore:"The point of no return. The power of your previous harvests is the only thing that has meaning now."}, genesis: { name: "Genesis", unlockCost: 1e13, perk: "Doubles shard gains.", bonus: { type: 'ascension_shard_bonus', value: 1 }, lore:"The spark that came before the first bang. A realm of pure potential, waiting to be consumed and remade."}, pantheon_of_ashes: { name: "Pantheon of Ashes", unlockCost: 1e18, perk: "Soul Resonance is twice as effective.", bonus: { type: 'resonance_bonus_enhancer', value: 1}, lore:"The graveyard of forgotten gods. Their fading power infuses every soul you claim here."}, chronos_fault: { name: "Chronos' Fault", unlockCost: 1e25, perk: "All ritual cooldowns are halved.", bonus: { type: 'ritual_cooldown_reducer', value: 0.5}, lore:"A crack in time itself. The laws of cause and effect are suggestions, not rules."}, omega_point: { name: "Omega Point", unlockCost: 1e33, perk: "All soul gains x10.", bonus: { type: 'global_multiplier', value: 10 }, lore:"The final moment of the final universe. All that was, is, and ever will be is harvested in a single, glorious instant."}, true_infinity:   { name: "True Infinity",     unlockCost: 1e42,   perk: "You have consumed all. There is nothing left.", bonus: { type: 'none' }, lore:"You sit on a throne of cosmic dust, the last thinking being at the end of time. There is nothing left to harvest... or is there?"}, };
 const items = { chipped_dagger: { name: "Chipped Dagger", type: "weapon", rarity: "common", desc: "+10% Souls Per Click.", bonus: { type: 'spc_multiplier', value: 1.10 } }, soul_cleaver: { name: "Soul Cleaver", type: "weapon", rarity: "uncommon", desc: "+25% Souls Per Click.", bonus: { type: 'spc_multiplier', value: 1.25 } }, abyssal_scythe: { name: "Abyssal Scythe", type: "weapon", rarity: "rare", desc: "+50% Souls Per Click. Your SPC contributes 0.01% to your SPS.", bonus: { type: 'spc_multiplier', value: 1.50, and: { type: 'spc_to_sps', value: 0.0001 } } }, blade_of_the_damned: { name: "Blade of the Damned", type: "weapon", rarity: "legendary", desc: "Doubles Souls Per Click. Clicks have a 1% chance to also grant 1 Dark Essence.", bonus: { type: 'spc_multiplier', value: 2.0, and: { type: 'spc_essence_chance', value: 0.01 } } }, cracked_effigy: { name: "Cracked Effigy", type: "idol", rarity: "common", desc: "+10% Souls Per Second.", bonus: { type: 'sps_multiplier', value: 1.10 } }, demonic_relic: { name: "Demonic Relic", type: "idol", rarity: "uncommon", desc: "+25% Souls Per Second.", bonus: { type: 'sps_multiplier', value: 1.25 } }, void_totem: { name: "Void Totem", type: "idol", rarity: "rare", desc: "+50% Souls Per Second. All minion costs are reduced by 5%.", bonus: { type: 'sps_multiplier', value: 1.50, and: { type: 'minion_cost_reducer', value: 0.95 } } }, heart_of_the_horde: { name: "Heart of the Horde", type: "idol", rarity: "legendary", desc: "Doubles Souls Per Second. Gain +1% SPS for every 10 ascensions.", bonus: { type: 'sps_multiplier', value: 2.0, and: { type: 'sps_per_10_ascensions', value: 0.01 } } }, faded_rune: { name: "Faded Rune", type: "sigil", rarity: "common", desc: "Gain 5% more Dark Essence from sacrifices.", bonus: { type: 'essence_multiplier', value: 1.05 } }, starlit_glyph: { name: "Starlit Glyph", type: "sigil", rarity: "uncommon", desc: "+10% Abyssal Shards gained on Ascension.", bonus: { type: 'ascension_shard_bonus', value: 0.10 } }, covenant_of_souls: { name: "Covenant of Souls", type: "sigil", rarity: "rare", desc: "Soul Resonance is 20% more effective.", bonus: { type: 'resonance_bonus_enhancer', value: 0.20 } }, mark_of_the_first: { name: "Mark of the First", type: "sigil", rarity: "legendary", desc: "Your first purchase of each minion per run is free.", bonus: { type: 'first_minion_free' } }, iron_mask: { name: "Iron Mask", type: "helm", rarity: "common", desc: "In PvP Duels, you take 10% less passive damage.", bonus: { type: 'pvp_defense', value: 0.90 } }, gaze_of_terror: { name: "Gaze of Terror", type: "helm", rarity: "uncommon", desc: "In PvP Duels, the opponent's passive damage is reduced by 25%.", bonus: { type: 'pvp_defense', value: 0.75 } }, crown_of_dominance: { name: "Crown of Dominance", type: "helm", rarity: "rare", desc: "In PvP Duels, your click damage is increased by 50%.", bonus: { type: 'pvp_offense', value: 1.50 } }, helm_of_the_conqueror: { name: "Helm of the Conqueror", type: "helm", rarity: "legendary", desc: "Start PvP Duels with a 2-second head start before the opponent deals damage.", bonus: { type: 'pvp_headstart', value: 2 } }, };
 const potions = { draught_of_might: { name: "Draught of Might", desc: "For 60 seconds, your Souls Per Click is increased by 25% of your Souls Per Second.", cost: 1e6, effect: { type: 'add_sps_to_spc_flat', value: 0.25, duration: 60 } }, ichor_of_wealth: { name: "Ichor of Wealth", desc: "Instantly gain souls equal to 30 minutes of your current SPS.", cost: 1e7, effect: { type: 'gain_sps_seconds_flat', value: 1800 } }, elixir_of_wisdom: { name: "Elixir of Wisdom", desc: "For 5 minutes, all minions cost 10% less.", cost: 1e8, effect: { type: 'temp_minion_cost_reducer_flat', value: 0.90, duration: 300 } }, brew_of_the_void: { name: "Brew of the Void", desc: "Instantly gain 2 Dark Essence.", cost: 1e9, costType: 'souls_and_shards', shardsCost: 1, effect: { type: 'gain_essence_flat', value: 2 } } };
 // =================================================================
@@ -1122,8 +1192,72 @@ function checkClickSpam(now) { antiCheatState.clickTimestamps.push(now); const o
 function checkClickRhythm(now) { if (antiCheatState.clickTimestamps.length < 2) return; const lastClickTime = antiCheatState.clickTimestamps[antiCheatState.clickTimestamps.length - 2]; const interval = now - lastClickTime; antiCheatState.clickIntervals.push(interval); if (antiCheatState.clickIntervals.length > 10) { antiCheatState.clickIntervals.shift(); const stdDev = calculateStandardDeviation(antiCheatState.clickIntervals); if (stdDev < 3) { console.warn(`Anti-Cheat Triggered: Low Rhythm Deviation (${stdDev})`); punishPlayer(); } } }
 function punishPlayer() { if (antiCheatState.isLockedOut) return; antiCheatState.isLockedOut = true; antiCheatState.punishmentLevel++; const lockoutTime = 5000 * antiCheatState.punishmentLevel; alert(`An unstable connection to the abyss has been detected. Harvesting disabled for ${lockoutTime / 1000} seconds.`); const btn = document.querySelector('.action-btn'); const originalText = btn.innerText; btn.innerText = "CONNECTION UNSTABLE"; btn.disabled = true; setTimeout(() => { antiCheatState.isLockedOut = false; btn.innerText = originalText; btn.disabled = false; antiCheatState.clickTimestamps = []; antiCheatState.clickIntervals = []; }, lockoutTime); }
 function calculateStandardDeviation(array) { if (!array.length) return 0; const n = array.length; const mean = array.reduce((a, b) => a + b) / n; const variance = array.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n; return Math.sqrt(variance); }
-// Abyssal Rift Canvas
-let riftCtx, riftParticles; function initRift() { const canvas = document.getElementById('rift-canvas'); if (!canvas) return; riftCtx = canvas.getContext('2d'); const btn = document.querySelector('.action-btn'); canvas.width = btn.offsetWidth + 100; canvas.height = btn.offsetHeight + 100; riftParticles = []; for (let i = 0; i < 50; i++) riftParticles.push({ x: canvas.width / 2, y: canvas.height / 2, size: Math.random() * 2 + 1, speedX: (Math.random() - 0.5) * 2, speedY: (Math.random() - 0.5) * 2, color: `rgba(179, 33, 33, ${Math.random() * 0.5 + 0.2})`, life: 0, maxLife: Math.random() * 100 + 50, }); function drawRift() { riftCtx.clearRect(0, 0, canvas.width, canvas.height); riftParticles.forEach(p => { p.x += p.speedX; p.y += p.speedY; p.life++; if (p.life >= p.maxLife) { p.x = canvas.width / 2; p.y = canvas.height / 2; p.life = 0; p.speedX = (Math.random() - 0.5) * (1 + gameState.stats.spc / 1000); p.speedY = (Math.random() - 0.5) * (1 + gameState.stats.spc / 1000); } const intensity = Math.sin(p.life / p.maxLife * Math.PI); riftCtx.beginPath(); riftCtx.fillStyle = p.color; riftCtx.globalAlpha = intensity; riftCtx.arc(p.x, p.y, p.size * intensity, 0, Math.PI * 2); riftCtx.fill(); }); requestAnimationFrame(drawRift); } drawRift(); }
+
+// =================================================================
+// ABYSSAL RIFT VISUALIZER
+// =================================================================
+let riftCtx, riftParticles;
+
+function initRift() {
+    const canvas = document.getElementById('rift-canvas');
+    const btn = document.querySelector('.action-btn');
+    if (!canvas || !btn) return;
+
+    // Make the canvas slightly larger than the button
+    canvas.width = btn.offsetWidth + 100;
+    canvas.height = btn.offsetHeight + 100;
+
+    riftCtx = canvas.getContext('2d');
+    riftParticles = [];
+    for (let i = 0; i < 50; i++) {
+        riftParticles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: Math.random() * 2 + 1,
+            speedX: (Math.random() - 0.5) * 2,
+            speedY: (Math.random() - 0.5) * 2,
+            color: `rgba(179, 33, 33, ${Math.random() * 0.5 + 0.2})`,
+            life: Math.random() * 200, // Start at a random point in their life
+            maxLife: Math.random() * 100 + 100,
+        });
+    }
+    drawRift(); // Start the animation loop
+}
+
+function drawRift() {
+    if (!riftCtx) return;
+
+    const canvas = riftCtx.canvas;
+    riftCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    riftParticles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.life++;
+
+        // Reset particle when it dies or goes off-screen
+        if (p.life >= p.maxLife || p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
+            p.x = canvas.width / 2;
+            p.y = canvas.height / 2;
+            p.life = 0;
+            // Speed is influenced by Souls Per Click, making the rift more violent as you get stronger
+            const power = Math.min(10, 1 + Math.log10(gameState.stats.spc || 1));
+            p.speedX = (Math.random() - 0.5) * power;
+            p.speedY = (Math.random() - 0.5) * power;
+        }
+
+        // Fade in and out over lifetime
+        const intensity = Math.sin(p.life / p.maxLife * Math.PI);
+        
+        riftCtx.beginPath();
+        riftCtx.fillStyle = p.color;
+        riftCtx.globalAlpha = intensity * 0.8; // Make it slightly transparent
+        riftCtx.arc(p.x, p.y, p.size * intensity, 0, Math.PI * 2);
+        riftCtx.fill();
+    });
+
+    requestAnimationFrame(drawRift);
+}
 </script>
 </body>
 </html>
