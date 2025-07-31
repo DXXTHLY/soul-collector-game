@@ -458,16 +458,16 @@ function showLore(worldId) { const lore = worlds[worldId].lore; if (!lore) retur
 function renderAscensionScreen() { document.getElementById('ascendBtn').disabled = !gameState.unlockedWorlds.includes('void_threshold'); }
 
 // =================================================================
-// PVP & LEADERBOARD FUNCTIONS (SUPABASE VERSION)
+// PVP & LEADERBOARD FUNCTIONS (FIXED & UPGRADED)
 // =================================================================
 async function fetchLeaderboard(type = 'lifetimeSouls') {
     const list = document.getElementById('leaderboard-list');
     const title = document.getElementById('leaderboard-title');
-    if (!list || !title || !supabaseClient) {
-        list.innerHTML = `<li>PvP Database not configured.</li>`;
+    if (!list || !title || !supabaseClient || SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        list.innerHTML = `<li>PvP Database not configured. See Step 1 in the tutorial.</li>`;
         return;
     }
-    list.innerHTML = '<li><em>Summoning spirits...</em></li>';
+    list.innerHTML = '<li><em>Summoning spirits from the datastream...</em></li>';
     try {
         const { data, error } = await supabaseClient
             .from('players')
@@ -475,31 +475,38 @@ async function fetchLeaderboard(type = 'lifetimeSouls') {
             .order(type, { ascending: false })
             .limit(10);
         if (error) throw error;
+        
+        // Add current player to the list for ranking context if not already present
         let players = data;
+        if (!players.some(p => p.name === gameState.playerName)) {
+             players.push({ name: gameState.playerName, lifetimeSouls: gameState.lifetimeSouls, ascensions: gameState.ascensions, pvpWins: gameState.pvpWins });
+        }
+        
         let rankingMetric = 'Souls';
         switch (type) {
-            case 'ascensions': rankingMetric = 'Ascensions'; title.innerText = 'Ranking by Ascensions'; break;
-            case 'pvpWins': rankingMetric = 'Wins'; title.innerText = 'Ranking by PvP Wins'; break;
-            default: rankingMetric = 'Souls'; title.innerText = 'Ranking by Total Souls'; break;
+            case 'ascensions': players.sort((a,b) => (b.ascensions || 0) - (a.ascensions || 0)); rankingMetric = 'Ascensions'; title.innerText = 'Ranking by Ascensions'; break;
+            case 'pvpWins': players.sort((a,b) => (b.pvpWins || 0) - (a.pvpWins || 0)); rankingMetric = 'Wins'; title.innerText = 'Ranking by PvP Wins'; break;
+            default: players.sort((a,b) => (b.lifetimeSouls || 0) - (a.lifetimeSouls || 0)); rankingMetric = 'Souls'; title.innerText = 'Ranking by Total Souls'; break;
         }
+
         list.innerHTML = '';
-        players.forEach((player, index) => {
+        players.slice(0, 10).forEach((player, index) => {
             const li = document.createElement('li');
             let value = (type === 'ascensions') ? (player.ascensions || 0) : (type === 'pvpWins') ? (player.pvpWins || 0) : formatNumber(player.lifetimeSouls || 0);
             li.innerHTML = `<span>#${index + 1} ${player.name}</span> <span>${value} ${rankingMetric}</span>`;
-            if (player.name === gameState.playerName) li.style.cssText = 'color: var(--primary-color); font-weight: bold;';
+            if (player.name === gameState.playerName) li.style.cssText = 'color: var(--primary-color); font-weight: bold; border-color: var(--primary-color);';
             list.appendChild(li);
         });
     } catch (e) {
-        list.innerHTML = `<li>Error summoning spirits.</li>`;
-        console.error(e);
+        list.innerHTML = `<li>Error summoning spirits. The abyss is unstable.</li>`;
+        console.error("Leaderboard Error:", e);
     }
 }
 
 async function fetchPvpTargets() {
     const targetList = document.getElementById('pvp-target-list');
-    if (!targetList || !supabaseClient) {
-        targetList.innerHTML = `<li>PvP Database not configured.</li>`;
+    if (!targetList || !supabaseClient || SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        targetList.innerHTML = `<li>PvP Database not configured. See Step 1 in the tutorial.</li>`;
         return;
     }
     targetList.innerHTML = '<li><em>Scouring the abyss for rivals...</em></li>';
@@ -508,67 +515,232 @@ async function fetchPvpTargets() {
             .from('players')
             .select('*')
             .neq('name', gameState.playerName)
-            .gte('lifetimeSouls', gameState.lifetimeSouls * 0.5)
-            .lte('lifetimeSouls', gameState.lifetimeSouls * 2);
+            .gte('lifetimeSouls', gameState.lifetimeSouls * 0.25) // Widen the search range
+            .lte('lifetimeSouls', gameState.lifetimeSouls * 4);
         if (error) throw error;
+        
         const potentialTargets = data.sort(() => 0.5 - Math.random()).slice(0, 5);
-        window.potentialTargetsData = data;
+        window.potentialTargetsData = data; // Store full data for raidPlayer to use
+        
         targetList.innerHTML = '';
         if (potentialTargets.length === 0) {
-            targetList.innerHTML = `<li>No suitable targets found in your soul range. Keep harvesting!</li>`;
+            targetList.innerHTML = `<li>No suitable targets found in your soul range. Grow stronger or weaker.</li>`;
             return;
         }
         potentialTargets.forEach(player => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${player.name} (Wins: ${player.pvpWins || 0})</span> <button class="upgrade-btn" style="width: 100px;" onclick="raidPlayer('${player.name}')">Raid</button>`;
+            li.innerHTML = `<span>${player.name} (Souls: ${formatNumber(player.lifetimeSouls)})</span> <button class="upgrade-btn" style="width: 100px;" onclick="raidPlayer('${player.name}')">Raid</button>`;
             targetList.appendChild(li);
         });
     } catch(e) {
-        targetList.innerHTML = `<li>Error finding targets.</li>`;
-        console.error("Detailed PvP Error:", e);
+        targetList.innerHTML = `<li>Error finding targets. The abyss resists your scrying.</li>`;
+        console.error("PvP Target Error:", e);
     }
 }
+
 function raidPlayer(targetName) {
     if (Date.now() < gameState.raidCooldownEnd) {
         alert("Your raiding parties are exhausted. Wait for the cooldown.");
         return;
     }
     if (!window.potentialTargetsData) {
-        alert("Target data not found! Please find new opponents first.");
+        alert("Target data has expired! Please find new opponents.");
         return;
     }
     const defender = window.potentialTargetsData.find(p => p.name === targetName);
     if (!defender) {
-        alert("Target has vanished!");
+        alert("Target has vanished into the abyss!");
         return;
     }
+    
+    // --- FIXED DUEL MECHANICS ---
     duelState = {
-        active: true, timer: 15, opponent: defender, opponentMaxHealth: (defender.lifetimeSouls || 1e9) / 1e5,
-        opponentCurrentHealth: (defender.lifetimeSouls || 1e9) / 1e5, playerMaxHealth: (gameState.lifetimeSouls || 1e6) / 1e5,
-        playerCurrentHealth: (gameState.lifetimeSouls || 1e6) / 1e5, opponentDamagePerSecond: (defender.lifetimeSouls || 1e9) / 1e8, playerDamageMultiplier: 1,
+        active: true,
+        timer: 15,
+        opponent: defender,
+        playerMaxHealth: 100,
+        playerCurrentHealth: 100,
+        opponentMaxHealth: 100,
+        opponentCurrentHealth: 100,
+        // Opponent's attack speed is based on their soul power. Harder opponents attack faster.
+        opponentAttackInterval: Math.max(200, 1000 - Math.log10(defender.lifetimeSouls || 1) * 50),
+        lastOpponentAttack: Date.now()
     };
-    const helmId = gameState.equipped.helm;
-    if (helmId && items[helmId]) {
-        const bonus = items[helmId].bonus;
-        if (bonus.type === 'pvp_defense') duelState.opponentDamagePerSecond *= bonus.value;
-        if (bonus.type === 'pvp_offense') duelState.playerDamageMultiplier = bonus.value;
-        if (bonus.type === 'pvp_headstart') duelState.playerDamageImmuneUntil = Date.now() + (bonus.value * 1000);
-    }
+    
     document.getElementById('duel-overlay').style.display = 'flex';
-    document.getElementById('opponent-name').innerText = `VS ${defender.name}`;
-    updateDuelUI();
-    duelState.gameInterval = setInterval(duelGameLoop, 100);
-    duelState.weakPointInterval = setInterval(spawnWeakPoint, 1500);
-}
-function renderPvpLog() { const logList = document.getElementById('pvp-log-list'); if(!logList) return; logList.innerHTML = ''; if (!gameState.attackLog || gameState.attackLog.length === 0) { logList.innerHTML = '<li>Your log is clear.</li>'; return; } [...gameState.attackLog].reverse().slice(0, 10).forEach(entry => { const li = document.createElement('li'); li.innerHTML = entry.message; li.style.color = entry.type === 'win' ? 'lime' : 'var(--primary-color)'; logList.appendChild(li); }); }
+    document.getElementById('duel-container').innerHTML = `
+        <h2 id="duel-title">Channeling Duel!</h2>
+        <div class="duel-bar-container">
+            <div id="opponent-name">VS ${defender.name}</div>
+            <div class="health-bar"><div id="opponent-health-fill" class="health-fill"></div></div>
+        </div>
+        <div id="duel-arena"><div id="soul-core" onclick="duelClickCore()"></div></div>
+        <div class="duel-bar-container">
+            <div id="player-duel-name">Your Power</div>
+            <div class="health-bar"><div id="player-health-fill" class="health-fill"></div></div>
+        </div>
+        <div id="duel-timer">15</div>`;
 
-function updateRaidCooldownDisplay() { const timerEl = document.getElementById('raid-cooldown-timer'); if (!timerEl) return; const now = Date.now(); if (now < gameState.raidCooldownEnd) { const timeLeft = Math.ceil((gameState.raidCooldownEnd - now) / 1000); timerEl.innerText = `Raid Cooldown: ${timeLeft}s`; } else { timerEl.innerText = 'Raid Ready!'; } }
-function duelClickCore() { if (!duelState.active) return; const damage = gameState.stats.spc * duelState.playerDamageMultiplier; duelState.opponentCurrentHealth -= damage; if (duelState.opponentCurrentHealth <= 0) endDuel(true); updateDuelUI(); }
-function duelClickWeakPoint(event) { if (!duelState.active) return; const damage = (gameState.stats.spc * 5) * duelState.playerDamageMultiplier; duelState.opponentCurrentHealth -= damage; event.target.remove(); if (duelState.opponentCurrentHealth <= 0) endDuel(true); updateDuelUI(); }
-function spawnWeakPoint() { if (!duelState.active) return; const arena = document.getElementById('duel-arena'); const weakPoint = document.createElement('div'); weakPoint.className = 'weak-point'; weakPoint.onclick = duelClickWeakPoint; const angle = Math.random() * 2 * Math.PI; const radius = 90; const x = Math.cos(angle) * radius + (arena.clientWidth / 2) - 20; const y = Math.sin(angle) * radius + (arena.clientHeight / 2) - 20; weakPoint.style.left = `${x}px`; weakPoint.style.top = `${y}px`; arena.appendChild(weakPoint); setTimeout(() => weakPoint.remove(), 1400); }
-function duelGameLoop() { if (!duelState.active) return; const now = Date.now(); const isPlayerImmune = duelState.playerDamageImmuneUntil && now < duelState.playerDamageImmuneUntil; if (!isPlayerImmune) duelState.playerCurrentHealth -= duelState.opponentDamagePerSecond / 10; duelState.timer -= 0.1; if (duelState.playerCurrentHealth <= 0) { endDuel(false); } else if (duelState.timer <= 0) { const playerDmgPercent = 1 - (duelState.opponentCurrentHealth / duelState.opponentMaxHealth); const opponentDmgPercent = 1 - (duelState.playerCurrentHealth / duelState.playerMaxHealth); endDuel(playerDmgPercent > opponentDmgPercent); } updateDuelUI(); }
-function updateDuelUI() { const opponentHealthPercent = Math.max(0, (duelState.opponentCurrentHealth / duelState.opponentMaxHealth) * 100); document.getElementById('opponent-health-fill').style.width = `${opponentHealthPercent}%`; const playerHealthPercent = Math.max(0, (duelState.playerCurrentHealth / duelState.playerMaxHealth) * 100); document.getElementById('player-health-fill').style.width = `${playerHealthPercent}%`; document.getElementById('duel-timer').innerText = Math.ceil(duelState.timer); }
-function endDuel(playerWon) { clearInterval(duelState.gameInterval); clearInterval(duelState.weakPointInterval); duelState.active = false; const defender = duelState.opponent; if (playerWon) { const soulsStolen = Math.floor((defender.lifetimeSouls || 0) * 0.05); gameState.souls += soulsStolen; gameState.pvpWins++; defender.pvpLosses = (defender.pvpLosses || 0) + 1; alert(`VICTORY! You have overwhelmed ${defender.name} and stolen ${formatNumber(soulsStolen)} souls!`); gameState.attackLog.push({ type: 'win', message: `You crushed ${defender.name} and claimed ${formatNumber(soulsStolen)} souls.` }); } else { const soulsLost = Math.floor(gameState.souls * 0.05); gameState.souls -= soulsLost; gameState.pvpLosses++; defender.pvpWins = (defender.pvpWins || 0) + 1; alert(`DEFEAT! Your channeling was disrupted. You lost ${formatNumber(soulsLost)} souls.`); gameState.attackLog.push({ type: 'loss', message: `You were defeated by ${defender.name} and lost ${formatNumber(soulsLost)} souls.` }); } document.getElementById('duel-overlay').style.display = 'none'; document.getElementById('duel-arena').innerHTML = '<div id="soul-core" onclick="duelClickCore()"></div>'; gameState.raidCooldownEnd = Date.now() + 60000; renderAll(); saveGame(); }
+    updateDuelUI();
+    audio.duelHeartbeat.play().catch(e => {});
+    duelState.gameInterval = setInterval(duelGameLoop, 1000 / 60); // Run at 60fps for smoothness
+    duelState.weakPointInterval = setInterval(spawnWeakPoint, 1800);
+}
+
+function renderPvpLog() {
+    const logList = document.getElementById('pvp-log-list');
+    if (!logList) return;
+    logList.innerHTML = '';
+    if (!gameState.attackLog || gameState.attackLog.length === 0) {
+        logList.innerHTML = '<li>Your log is clear.</li>';
+        return;
+    }
+    [...gameState.attackLog].reverse().slice(0, 10).forEach(entry => {
+        const li = document.createElement('li');
+        li.innerHTML = entry.message;
+        li.style.color = entry.type === 'win' ? 'lime' : 'var(--primary-color)';
+        logList.appendChild(li);
+    });
+}
+
+function updateRaidCooldownDisplay() {
+    const timerEl = document.getElementById('raid-cooldown-timer');
+    if (!timerEl) return;
+    const now = Date.now();
+    if (now < gameState.raidCooldownEnd) {
+        const timeLeft = Math.ceil((gameState.raidCooldownEnd - now) / 1000);
+        timerEl.innerText = `Raid Cooldown: ${timeLeft}s`;
+    } else {
+        timerEl.innerText = 'Raid Ready!';
+    }
+}
+
+function duelClickCore() {
+    if (!duelState.active) return;
+    // FIXED: Damage is a small, fixed amount, modified by items.
+    let damage = 2.5; 
+    const helmId = gameState.equipped.helm;
+    if (helmId && items[helmId]?.bonus.type === 'pvp_offense') {
+        damage *= items[helmId].bonus.value;
+    }
+    duelState.opponentCurrentHealth -= damage;
+    audio.duelDamage.currentTime = 0;
+    audio.duelDamage.play().catch(e => {});
+    if (duelState.opponentCurrentHealth <= 0) endDuel(true);
+    updateDuelUI();
+}
+
+function duelClickWeakPoint(event) {
+    if (!duelState.active) return;
+    // FIXED: Weak point damage is a critical hit, a multiplier of the base damage.
+    let damage = 10;
+     const helmId = gameState.equipped.helm;
+    if (helmId && items[helmId]?.bonus.type === 'pvp_offense') {
+        damage *= items[helmId].bonus.value;
+    }
+    duelState.opponentCurrentHealth -= damage;
+    event.target.remove();
+    audio.duelCrit.currentTime = 0;
+    audio.duelCrit.play().catch(e => {});
+    if (duelState.opponentCurrentHealth <= 0) endDuel(true);
+    updateDuelUI();
+}
+
+function spawnWeakPoint() {
+    if (!duelState.active) return;
+    const arena = document.getElementById('duel-arena');
+    const weakPoint = document.createElement('div');
+    weakPoint.className = 'weak-point';
+    weakPoint.onclick = duelClickWeakPoint;
+    const angle = Math.random() * 2 * Math.PI;
+    const radius = 90;
+    const x = Math.cos(angle) * radius + (arena.clientWidth / 2) - 20;
+    const y = Math.sin(angle) * radius + (arena.clientHeight / 2) - 20;
+    weakPoint.style.left = `${x}px`;
+    weakPoint.style.top = `${y}px`;
+    arena.appendChild(weakPoint);
+    setTimeout(() => weakPoint.remove(), 1700);
+}
+
+function duelGameLoop() {
+    if (!duelState.active) return;
+    const now = Date.now();
+    
+    // Opponent attacks on their interval
+    if (now > duelState.lastOpponentAttack + duelState.opponentAttackInterval) {
+        let opponentDamage = 10;
+        const helmId = gameState.equipped.helm;
+        if (helmId && items[helmId]?.bonus.type === 'pvp_defense') {
+            opponentDamage *= items[helmId].bonus.value;
+        }
+        duelState.playerCurrentHealth -= opponentDamage;
+        duelState.lastOpponentAttack = now;
+        
+        const core = document.getElementById('soul-core');
+        if(core) {
+            core.classList.remove('opponent-attack');
+            void core.offsetWidth; // Trigger reflow
+            core.classList.add('opponent-attack');
+        }
+    }
+
+    duelState.timer -= (1 / 60);
+    if (duelState.playerCurrentHealth <= 0) {
+        endDuel(false);
+    } else if (duelState.timer <= 0) {
+        endDuel(duelState.playerCurrentHealth > duelState.opponentCurrentHealth);
+    }
+    updateDuelUI();
+}
+
+function updateDuelUI() {
+    if (!duelState.active) return;
+    const opponentHealthPercent = Math.max(0, (duelState.opponentCurrentHealth / duelState.opponentMaxHealth) * 100);
+    document.getElementById('opponent-health-fill').style.width = `${opponentHealthPercent}%`;
+    const playerHealthPercent = Math.max(0, (duelState.playerCurrentHealth / duelState.playerMaxHealth) * 100);
+    document.getElementById('player-health-fill').style.width = `${playerHealthPercent}%`;
+    document.getElementById('duel-timer').innerText = Math.ceil(duelState.timer);
+}
+
+function endDuel(playerWon) {
+    if (!duelState.active) return; // Prevent this from running multiple times
+    clearInterval(duelState.gameInterval);
+    clearInterval(duelState.weakPointInterval);
+    duelState.active = false;
+    audio.duelHeartbeat.pause();
+    
+    const defender = duelState.opponent;
+    const duelContainer = document.getElementById('duel-container');
+
+    if (playerWon) {
+        const soulsStolen = Math.floor((defender.lifetimeSouls || 0) * 0.05) + 100;
+        gameState.souls += soulsStolen;
+        gameState.pvpWins++;
+        gameState.attackLog.push({ type: 'win', message: `You crushed ${defender.name} and claimed ${formatNumber(soulsStolen)} souls.` });
+        duelContainer.innerHTML = `<div id="duel-result-screen">
+            <h2 style="color: lime;">VICTORY</h2>
+            <p>You have overwhelmed ${defender.name}!</p>
+            <p>Stolen: <span class="cost-souls">${formatNumber(soulsStolen)}</span> souls.</p>
+        </div>`;
+    } else {
+        const soulsLost = Math.floor(gameState.souls * 0.05);
+        gameState.souls = Math.max(0, gameState.souls - soulsLost);
+        gameState.pvpLosses++;
+        gameState.attackLog.push({ type: 'loss', message: `You were defeated by ${defender.name} and lost ${formatNumber(soulsLost)} souls.` });
+        duelContainer.innerHTML = `<div id="duel-result-screen">
+            <h2 style="color: red;">DEFEAT</h2>
+            <p>Your channeling was disrupted!</p>
+            <p>Lost: <span class="cost-souls">${formatNumber(soulsLost)}</span> souls.</p>
+        </div>`;
+    }
+
+    setTimeout(() => {
+        document.getElementById('duel-overlay').style.display = 'none';
+        gameState.raidCooldownEnd = Date.now() + 60000;
+        renderAll();
+        saveGame();
+    }, 4000);
+}
 // =================================================================
 // ANTI-CHEAT & VISUALS
 // =================================================================
