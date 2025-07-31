@@ -552,8 +552,8 @@ function raidPlayer(targetName) {
         alert("Target has vanished!");
         return;
     }
-    
-    // --- FIXED DUEL MECHANICS ---
+
+    // --- SETUP DUEL STATE ---
     duelState = {
         active: true,
         timer: 15,
@@ -562,11 +562,20 @@ function raidPlayer(targetName) {
         playerCurrentHealth: 100,
         opponentMaxHealth: 100,
         opponentCurrentHealth: 100,
-        // Opponent's attack speed is based on their soul power. Harder opponents attack faster.
         opponentAttackInterval: Math.max(200, 1000 - Math.log10(defender.lifetimeSouls || 1) * 50),
         lastOpponentAttack: Date.now()
     };
-    
+
+    // Apply item bonuses
+    const helmId = gameState.equipped.helm;
+    if (helmId && items[helmId]) {
+        const bonus = items[helmId].bonus;
+        if (bonus.type === 'pvp_defense') duelState.opponentAttackInterval *= (1 / bonus.value); 
+        if (bonus.type === 'pvp_offense') duelState.playerDamageMultiplier = bonus.value;
+        if (bonus.type === 'pvp_headstart') duelState.playerDamageImmuneUntil = Date.now() + (bonus.value * 1000);
+    }
+
+    // --- SHOW UI & START LOOPS (THIS IS THE FIX) ---
     document.getElementById('duel-overlay').style.display = 'flex';
     document.getElementById('duel-container').innerHTML = `
         <h2 id="duel-title">Channeling Duel!</h2>
@@ -580,13 +589,15 @@ function raidPlayer(targetName) {
             <div class="health-bar"><div id="player-health-fill" class="health-fill"></div></div>
         </div>
         <div id="duel-timer">15</div>`;
-
-    updateDuelUI(); // Set the initial health bars
     
-    // THIS IS THE CRITICAL FIX: START THE LOOPS
-    duelState.gameInterval = setInterval(duelGameLoop, 1000 / 60); // Run at 60fps for smoothness
+        document.getElementById('duel-overlay').style.display = 'flex';
+    document.getElementById('opponent-name').innerText = `VS ${defender.name}`;
+    updateDuelUI();
+
+    // START THE TIMERS - THIS IS THE FIX
+    duelState.gameInterval = setInterval(duelGameLoop, 1000 / 60); // Run at 60fps
     duelState.weakPointInterval = setInterval(spawnWeakPoint, 1800);
-}
+} // <--- This is the closing brace
 
 function renderPvpLog() {
     const logList = document.getElementById('pvp-log-list');
@@ -618,7 +629,7 @@ function updateRaidCooldownDisplay() {
 
 function duelClickCore() {
     if (!duelState.active) return;
-    // FIXED: Damage is a small, fixed amount, not your huge SPC.
+    // FIXED: Damage is a small, fixed amount, not based on your huge SPC.
     let damage = 2.5; 
     const helmId = gameState.equipped.helm;
     if (helmId && items[helmId]?.bonus.type === 'pvp_offense') {
@@ -638,7 +649,7 @@ function duelClickWeakPoint(event) {
         damage *= items[helmId].bonus.value;
     }
     duelState.opponentCurrentHealth -= damage;
-    event.target.remove();
+    event.target.remove(); // Remove the weak point after clicking
     if (duelState.opponentCurrentHealth <= 0) endDuel(true);
     updateDuelUI();
 }
@@ -733,7 +744,7 @@ function endDuel(playerWon) {
     // Wait 4 seconds before closing the duel screen
     setTimeout(() => {
         document.getElementById('duel-overlay').style.display = 'none';
-        gameState.raidCooldownEnd = Date.now() + 60000;
+        gameState.raidCooldownEnd = Date.now() + 60000; // 1 minute cooldown
         renderAll();
         saveGame();
     }, 4000);
