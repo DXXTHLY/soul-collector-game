@@ -1,6 +1,6 @@
 # 🔥 Soul Collector - Abyssal Ascension 🔥
 
-> Game: https://dxxthly.github.io/soul-collector-game
+> **Play the Game:** [CLICK HERE TO PLAY](https://dxxthly.github.io/soul-collector-game/)
 
 *An incremental idle game of cosmic consequence and endless harvesting.*
 
@@ -23,8 +23,8 @@
 *   **Prestige Mechanic:** Ascend to gain Abyssal Shards for massive permanent boosts.
 *   **World Progression:** Unlock new, thematic worlds that provide unique bonuses and minions.
 *   **Equipment & Items:** Open Abyssal Caches to find powerful items to equip.
-*   **Asynchronous PvP:** Raid the saved data of other players in a simulated duel to steal souls and climb the leaderboards.
-*   **Leaderboards:** Compete against other Soul Collectors for the top spot in multiple categories.
+*   **Asynchronous PvP:** Raid the saved data of other players in a real-time minigame duel to steal souls and climb the leaderboards.
+*   **Leaderboards:** Compete against other Soul Collectors for the top spot in multiple categories, powered by a shared online database.
 
 ---
 
@@ -51,16 +51,28 @@ To gain true power, you need a more refined currency.
 ### The Main Prestige Loop: Ascension & Abyssal Shards
 This is the core mechanic for long-term progress.
 1.  **Unlock Ascension:** To unlock the ability to Ascend, you must first progress through the **Worlds** (on the "Worlds" tab) until you unlock the **"Void Threshold"**.
-2.  **What Ascension Does:** When you Ascend, you will **reset your current progress**. This includes your Souls, Dark Essence (spent on non-artifact upgrades), Minions, and unlocked Worlds.
+2.  **What Ascension Does:** When you Ascend, you will **reset most of your current progress**. This includes your Souls, Minions, and unlocked Worlds.
 3.  **What You Gain:** In exchange, you will gain **Abyssal Shards**. The number of shards you get is based on the total number of souls you have harvested during that run.
 4.  **The Power of Shards:** Abyssal Shards provide a **MASSIVE permanent multiplier** to all soul gains in your next life and all future lives. Your first Ascension will feel slow, but your second run will be dramatically faster, allowing you to reach your previous point of progress in a fraction of the time.
 
 ### Multiplayer: Raids & Leaderboards
-You are not the only Soul Collector in the void.
-1.  **Find Opponents:** Go to the **"Raids"** tab and click "Find New Opponents". The game will find other players in the database who are at a similar power level to you.
-2.  **Raid:** Click the "Raid" button to begin a simulated duel against another player's saved data.
-3.  **Win/Lose:** If you win, you steal a percentage of their souls. If you lose, they steal some of yours.
-4.  **Climb:** Winning raids increases your PvP Wins, helping you climb the **Leaderboards** (found on its own tab).
+You are not the only Soul Collector in the void. Raids are a test of skill, not just your stats.
+
+1.  **Find Opponents:** Go to the **"Raids"** tab and click "Find New Opponents". The game will fetch a list of other real players from the online database who are in a similar power range.
+
+2.  **Start a Raid:** Choose an opponent and click "Raid" to begin the **Channeling Duel**, a fast-paced minigame.
+
+3.  **How to Win the Duel:**
+    *   **Your Goal:** Deplete the opponent's red health bar before they deplete your blue one, or before the 15-second timer runs out.
+    *   **Deal Damage:** Repeatedly **click the large red circle (the Soul Core)** in the center of the arena to damage your opponent.
+    *   **Critical Hits:** **Yellow weak points** will randomly appear around the core. Clicking these deals significantly more damage! Prioritize them.
+    *   **Survive:** The opponent automatically attacks you over time, draining your blue health bar. The stronger the opponent, the faster they attack.
+
+4.  **The Spoils:**
+    *   **Victory:** If you win the duel, you steal a percentage of the opponent's total souls from their last save, adding them to your own.
+    *   **Defeat:** If you lose, you lose a small percentage of your current souls.
+
+5.  **Climb the Ranks:** Winning raids increases your PvP Wins stat, helping you climb the **Leaderboards** (found on its own tab).
 
 ---
 
