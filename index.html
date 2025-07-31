@@ -535,7 +535,7 @@ const potions = { draught_of_might: { name: "Draught of Might", desc: "For 60 se
 // =================================================================
 // GAME STATE & CORE LOGIC
 // =================================================================
-let gameState = {}; let duelState = {};
+let gameState = {}; let duelState = {}; let hasUserInteracted = false;
 const antiCheatState = { clickTimestamps: [], clickIntervals: [], punishmentLevel: 0, isLockedOut: false };
 function getDefaultGameState() { const newMinionsState = {}; for (const id in minions) { newMinionsState[id] = { level: 0, cost: minions[id].cost }; } return { playerName: "Unnamed", souls: 0, lifetimeSouls: 0, darkEssence: 0, abyssalShards: 0, ascensions: 0, currentWorld: 'nether_plains', unlockedWorlds: ['nether_plains'], stats: { sps: 0, spc: 1 }, upgrades: { click: { level: 1, cost: 10, multiplier: 1.12 }, sacrifice: { cost: 1000, multiplier: 2.5 }, resonance: { level: 0, cost: 5, multiplier: 2 }, }, minions: newMinionsState, ownedArtifacts: {}, activeRituals: {}, potions: {}, activePotions: {}, inventory: [], equipped: { weapon: null, idol: null, sigil: null, helm: null, }, nextCacheTime: 0, pvpWins: 0, pvpLosses: 0, attackLog: [], raidCooldownEnd: 0, }; }
 // =================================================================
