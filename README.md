@@ -4,11 +4,11 @@
 
 *An incremental idle game of cosmic consequence and endless harvesting.*
 
-> The last star has flickered out. The universe has succumbed to entropy, its once-vibrant energies fading into a cold, silent void. Yet, not all is lost. You are a Soul Collector, an ancient and powerful entity existing outside of time, tasked with a monumental purpose: to harvest the lingering echoes of life—the souls—before they fade into nothingness.
+> The last star has flickered out. The universe has succumbed to entropy, its once-vibrant energies fading into a cold, silent void. Yet, not all is lost. You are a Soul Collector, an ancient and powerful entity existing outside of time, tasked with a monumental purpose: to harvest the lingering echoes of life the souls.. before they fade into nothingness.
 >
 > Your vessel is the Soul Core, a nexus of unimaginable power. By channeling the harvested souls into it, you can generate Dark Essence, the concentrated memory of existence. With this essence, you can bind artifacts of immense power and enslave demonic minions to automate your harvest.
 >
-> Your ultimate goal is to gather enough power to trigger an Ascension—a controlled universal collapse and rebirth. By shattering your Soul Core, you will unleash its collected energy, creating a new universe from the ashes of the old. The Abyssal Shards left behind from this cataclysm are fragments of a previous reality, and they will grant you exponentially greater power in the next cycle.
+> Your ultimate goal is to gather enough power to trigger an Ascension: a controlled universal collapse and rebirth. By shattering your Soul Core, you will unleash its collected energy, creating a new universe from the ashes of the old. The Abyssal Shards left behind from this cataclysm are fragments of a previous reality, and they will grant you exponentially greater power in the next cycle.
 >
 > Begin the harvest. The Omega Point awaits.
 
