@@ -1,6 +1,6 @@
 # 🔥 Soul Collector - Abyssal Ascension 🔥
 
-> **Play the Game:** [CLICK HERE TO PLAY](https://dxxthly.github.io/soul-collector-game/)
+> **Play the Game:** [CLICK HERE TO PLAY](https://sonicgetaway.com/game.html)
 
 *An incremental idle game of cosmic consequence and endless harvesting.*
 
